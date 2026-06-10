@@ -1,0 +1,15 @@
+# Python 虚拟环境与缓存
+.venv/
+__pycache__/
+*.pyc
+
+# 环境变量与机密
+.env
+
+# 忽略整个 data 文件夹下的所有内容，除了保留目录结构用的 .keep 文件（可选）
+data/
+
+# IDE 与编辑器配置
+.vscode/
+.idea/
+.DS_Store
