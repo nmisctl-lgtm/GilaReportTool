@@ -24,7 +24,7 @@ from backend.core_blaney_criddle import BlaneyCriddleEngine
 
 # Define the test dataset
 gdb_layer_name = "GSLU_IA_2025" # The layer in the GDB containing irrigated acreage for 2025
-test_polygon_id = "GSLU-00014" # a Luna decrede polygon for testing
+test_polygon_id = "GSLU-00015" # a Luna decrede polygon for testing
 Polygon_id_column = "Field_ID" # The column in the GDB layer that contains unique polygon identifiers
 
 # Configure logging
