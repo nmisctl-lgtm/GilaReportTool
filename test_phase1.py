@@ -26,6 +26,7 @@ from backend.core_blaney_criddle import BlaneyCriddleEngine
 gdb_layer_name = "GSLU_IA_2025" # The layer in the GDB containing irrigated acreage for 2025
 test_polygon_id = "GSLU-00015" # a Luna decrede polygon for testing
 Polygon_id_column = "Field_ID" # The column in the GDB layer that contains unique polygon identifiers
+gdb_path = r"C:\Users\Tao.Liu\OneDrive - State of New Mexico\Documents\Projects_local\GilaReport\ToolDev\data_inputs\geodatabase\irrigated_acreage_20251.gdb"
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s - %(message)s')
@@ -37,7 +38,7 @@ def run_integration_test():
     json_path = os.path.join(data_dir, "CropCoefficients.json")
     table16_csv_path = os.path.join(data_dir, "table16_norther.csv")
     # shp_path = os.path.join(data_dir, "shapefiles/HydroSurvAreas.shp")
-    gdb_path = os.path.join(data_dir, "geodatabase/irrigated_acreage_20251.gdb") # Updated to GDB path for testing
+    # gdb_path = os.path.join(data_dir, "geodatabase/irrigated_acreage_20251.gdb") # Updated to GDB path for testing
     test_year = 2025
     
     print(f"Looking for JSON at: {json_path}")
