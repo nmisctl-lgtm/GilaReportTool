@@ -36,12 +36,17 @@ class DitchInput:
     monthly_diversion_acft: tuple[float | None, ...]
     measurement_status: tuple[MeasurementStatus, ...]
     shortage_assessed: tuple[bool, ...]
+    monthly_reservoir_net_evap_override_acft: tuple[float | None, ...] | None = None
 
     def __post_init__(self) -> None:
         if not all(len(values) == 12 for values in (
             self.monthly_diversion_acft, self.measurement_status, self.shortage_assessed
         )):
             raise ValueError("DitchInput requires exactly 12 monthly diversion, status, and assessment values")
+        if self.monthly_reservoir_net_evap_override_acft is not None and len(
+            self.monthly_reservoir_net_evap_override_acft
+        ) != 12:
+            raise ValueError("Reservoir net-evaporation overrides must contain exactly 12 values")
 
 
 @dataclass(frozen=True)
@@ -129,6 +134,13 @@ def validate_ledger_inputs(
                 issues.append(QAIssue("error", "invalid_shortage_assessment", "Shortage can be assessed only from a present metered diversion.", ditch.ditch_id, month))
             if status == "unavailable" and not assessed:
                 issues.append(QAIssue("warning", "unassessed_unavailable_month", "No shortage is inferred from unavailable data; a policy decision is required.", ditch.ditch_id, month))
+        if ditch.monthly_reservoir_net_evap_override_acft is not None:
+            for month, value in enumerate(ditch.monthly_reservoir_net_evap_override_acft, 1):
+                if value is not None and value < 0:
+                    issues.append(QAIssue(
+                        "error", "negative_reservoir_net_evap_override",
+                        "Reservoir net-evaporation override cannot be negative.", ditch.ditch_id, month,
+                    ))
     return tuple(issues)
 
 
@@ -153,16 +165,22 @@ def calculate_ditch_ledger(
     if errors:
         raise ValueError("; ".join(errors))
     monthly: list[MonthlyDitchLedger] = []
-    for month, (cir, pan_evap, precip, diversion, status, assessed) in enumerate(zip(
+    reservoir_overrides = ditch.monthly_reservoir_net_evap_override_acft or (None,) * 12
+    for month, (cir, pan_evap, precip, diversion, status, assessed, reservoir_override) in enumerate(zip(
         monthly_cir_ft,
         monthly_pan_evap_ft,
         monthly_precip_ft,
         ditch.monthly_diversion_acft,
         ditch.measurement_status,
         ditch.shortage_assessed,
+        reservoir_overrides,
     ), 1):
         crop_cu = ditch.crop_acres * cir
-        reservoir_net = ditch.reservoir_acres * max(pan_evap - precip, 0.0)
+        reservoir_net = (
+            reservoir_override
+            if reservoir_override is not None
+            else ditch.reservoir_acres * max(pan_evap - precip, 0.0)
+        )
         crop_required = crop_cu / efficiency
         reservoir_required = reservoir_net / efficiency
         required = crop_required + reservoir_required

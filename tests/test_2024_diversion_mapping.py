@@ -5,7 +5,13 @@ from backend.diversion_ingest import aggregate_daily_diversions
 from backend.diversion_mapping import map_monthly_diversions
 from backend.legacy_2024_diversion_mapping import LEGACY_2024_SOURCE_MAPPINGS
 from backend.legacy_diversion_workbook import read_2024_flow_workbook
-from backend.legacy_report_assets import read_2024_metered_ditch_assets
+from backend.legacy_report_assets import (
+    build_historical_ditch_inputs,
+    read_2024_area_diversion_inputs,
+    read_2024_metered_ditch_assets,
+    validate_historical_requirement_overrides,
+)
+from backend.diversion_ledger import calculate_area_diversion_ledger
 
 
 SPREADSHEET_ROOT = Path(__file__).resolve().parents[1] / "OldMethod_Report/Spreadsheet"
@@ -22,6 +28,9 @@ class Legacy2024DiversionMappingTests(unittest.TestCase):
         cls.assets = read_2024_metered_ditch_assets(
             SPREADSHEET_ROOT / "2024 Gila Report Data_WORKING.xlsx",
             LEGACY_2024_SOURCE_MAPPINGS,
+        )
+        cls.area_inputs = read_2024_area_diversion_inputs(
+            SPREADSHEET_ROOT / "2024 Gila Report Data_WORKING.xlsx"
         )
 
     def test_every_2024_flow_channel_has_an_explicit_disposition(self):
@@ -52,6 +61,42 @@ class Legacy2024DiversionMappingTests(unittest.TestCase):
                 self.assertAlmostEqual(mapped_value, workbook_value, places=7)
             self.assertGreaterEqual(asset.crop_acres, 0)
             self.assertGreaterEqual(asset.reservoir_acres, 0)
+
+    def test_recalculates_2024_metered_ditch_requirements_and_assessed_shortages(self):
+        assets_by_area = {}
+        for asset in self.assets:
+            assets_by_area.setdefault(asset.area_name, []).append(asset)
+        for area_input in self.area_inputs:
+            assets = assets_by_area.get(area_input.area_name, [])
+            if not assets:
+                continue
+            ledger = calculate_area_diversion_ledger(
+                area_input.area_name,
+                efficiency=area_input.efficiency,
+                monthly_cir_ft=area_input.monthly_report_cir_ft,
+                monthly_pan_evap_ft=area_input.monthly_adjusted_pan_evap_ft,
+                monthly_precip_ft=area_input.monthly_precip_ft,
+                ditches=build_historical_ditch_inputs(assets),
+            )
+            assets_by_id = {asset.canonical_ditch_id: asset for asset in assets}
+            for ditch in ledger.ditches:
+                expected = assets_by_id[ditch.ditch_id]
+                for calculation, required, shortage, requirement_is_formula in zip(
+                    ditch.monthly,
+                    expected.monthly_diversion_required_acft,
+                    expected.monthly_shortage_acft,
+                    expected.requirement_formula_months,
+                ):
+                    if requirement_is_formula:
+                        self.assertAlmostEqual(calculation.total_diversion_required_acft, required, places=8)
+                    self.assertAlmostEqual(calculation.diversion_shortage_acft, shortage, delta=0.03)
+
+    def test_flags_one_nonzero_legacy_requirement_override_for_policy_review(self):
+        issues = [issue for issue in validate_historical_requirement_overrides(self.assets) if issue.severity == "error"]
+        self.assertEqual(
+            [(issue.ditch_id, issue.month) for issue in issues],
+            [("luna_a_laney", 3)],
+        )
 
 
 if __name__ == "__main__":

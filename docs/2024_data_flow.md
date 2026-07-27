@@ -64,21 +64,31 @@ without report metered-ditch blocks.
 acres plus each historical shortage-cell treatment from the report blocks.
 It captures those treatments for review but does not infer a future-year
 groundwater, estimated-flow, or shortage policy from a formula or zero.
+It also flags nonzero requirement cells pasted over formulas and preserves
+historical reservoir-net-evaporation constants as named overrides.  The 2024
+baseline contains one requirement exception (Luna `A. Laney Ditch`, March)
+and two reservoir overrides (Luna `Leslie Laney Ditch` and `A. Laney Ditch`,
+both March).  They must be resolved or explicitly approved as named policy
+exceptions before a fully automated production run uses them.
 
 ## 4. Per-ditch demand and measured shortage
 
 For a ditch and month, with efficiency `e`, crop acres `A_crop`, reservoir
-acres `A_res`, monthly report CIR `C`, pan evaporation `E_pan`, precipitation
-`P`, and measured diversion `D`:
+acres `A_res`, monthly report CIR `C`, **adjusted** pan evaporation `E_adj`,
+precipitation `P`, and measured diversion `D`:
 
 ```text
 crop_cu_demand_af       = A_crop * C
-reservoir_net_evap_af   = A_res * max(E_pan - P, 0)
+reservoir_net_evap_af   = A_res * max(E_adj - P, 0)
 crop_diversion_required = crop_cu_demand_af / e
 reservoir_div_required  = reservoir_net_evap_af / e
 total_diversion_required = crop_diversion_required + reservoir_div_required
 assessed_shortage        = max(total_diversion_required - D, 0)
 ```
+
+For the 2024 working workbook, `E_adj` is the sheet's monthly pan evaporation
+after its explicit 0.8 coefficient.  The new ledger accepts this adjusted
+depth directly; it does not apply 0.8 a second time.
 
 The last equation is used only when the input explicitly says that the month
 is metered and shortage-assessed.  Estimated, unavailable, and
