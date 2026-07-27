@@ -1,0 +1,40 @@
+Questions:
+1. Inconsistency in Crop_code and Crop_type in GIS files, and the table in the Report at p426. Here are a few examples I noticed:
+
+VV: 174, is it OCG?
+VV: 211, is it PIW?
+VV: 315, FA or HA? Irrigated or not? It looks like FA to me. But Cropy type is Hay (all other). 
+VV: 117, STW or RW? It looks like a STW to me. 
+CG: 35,  Unit/Ucode and many other fields are null
+CG: 55,  Unit/Ucode and many other fields are null
+CG: 63,  Unit/Ucode and many other fields are null
+CG: 91,  Unit/Ucode and many other fields are null
+CG: 102,  Unit/Ucode and many other fields are null
+CG: 121,  Unit/Ucode and many other fields are null
+CG: 290,  Unit/Ucode and many other fields are null
+CG: 295,  Unit/Ucode and many other fields are null
+CG: 322,  Unit/Ucode and many other fields are null
+CG: 338,  Unit/Ucode and many other fields are null
+CG: 363,  Unit/Ucode and many other fields are null
+CG: 387,  Unit/Ucode and many other fields are null
+CG: 391,  Unit/Ucode and many other fields are null
+CG: 534,  Unit/Ucode and many other fields are null
+CG: 537,  Unit/Ucode and many other fields are null
+CG: 897,  Unit/Ucode and many other fields are null
+And many other records in CG layer. I assume their Ucode are all CG, except for the following one.
+CG: 1126, this one has been included in UG layer (OID 134).
+RR: 1-7, No Irr_code. It seems they are all null or zero.
+VV: 248, 203, 117. No Irr_code. It seems they are all null or zero.
+
+
+2. Mismatch of crop type between OSE table and xirrigcu crop type:
+	1. GB - Garden Beans. The OSE table lists this as ID 703. Our xirrigcu JSON library has "12: Dry Beans" and "3: Misc. Vegetable". I assume it should relate to BC_ID 3 (Misc. Vegetable). The 700-series in the OSE table typically represents fresh vegetables, making BC_ID 3 a more scientifically accurate fit than Dry Beans.
+
+	2. PI - Pistachios. The OSE table lists this as 610, adjacent to Pecans (609). Our JSON library has "4: Orchard" and "27: Pecan Orchards". I assume it goes to BC_ID 4 (Orchard). Pecans (27) have highly unique water-use curves in NM. Pistachios likely align closer to standard orchard parameters rather than pecan-specific curves.
+
+	3. PEW - Pecans WUCB. The OSE table lists this as 609.1, a subset of Pecans. I guess it goes to BC_ID 27 (Pecan Orchards). Since it is a pecan variety, it should share the same parameters as standard Pecans.
+
+	4. WSG - Winter Small Grains. The OSE table specifies "Winter Small Grains (Spring) - 140". Our JSON library has two options: "8: Winter Small Grain (winter-spring)" and "9: Winter Small Grain (fall)". I think it goes to BC_ID 8 (Winter Small Grain, winter-spring). This directly aligns with the "(Spring)" designation explicitly mentioned in the OSE table.
+
+	5. SSL - Swamped/Seeped Land. Present in both GIS and OSE tables. I think it should be BC_ID 0 (Excluded from standard CIR calculations). While seeped lands consume water via evaporation, for the purpose of the Crop Survey and Decree accounting, I assume they are treated similarly to Fallow (FA) or Out Areas (OUT) and are not calculated as artificially irrigated acreage requiring a BC_ID.
+
