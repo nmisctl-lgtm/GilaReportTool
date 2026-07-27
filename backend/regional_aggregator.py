@@ -230,6 +230,8 @@ class RegionalWaterAggregator:
             "S29_Crop_Acres": round(S29_total_crop_acres, 2),
             "S31_Res_Acres": round(S31_total_res_acres, 2),
             "T32_Full_Supply_CU_AF": round(T32_total_full_supply_cu, 2),
+            "T29_Crop_Full_Supply_CU_AF": round(T29_crop_full_supply_cu, 2),
+            "T31_Res_Full_Supply_CU_AF": round(T31_res_full_supply_evap, 2),
             "U32_Total_Shortage_AF": round(U32_total_shortage, 2),
             "V32_Net_CU_AF": round(V32_total_net_cu, 2),
             "Q32_Groundwater_CU_AF": round(Q32_total_groundwater_cu, 2),
