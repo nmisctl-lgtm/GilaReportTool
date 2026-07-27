@@ -134,6 +134,33 @@ stock, municipal/industrial/domestic, and lake-evaporation components:
 | Table III — Ten-year CU | Table II stream-system totals plus prior nine years |
 | Table IV — Diversions | measured and estimated irrigation diversions by stream system |
 
+### Non-agricultural flow added to the automated baseline
+
+`backend/non_agricultural_use.py` now supplies the non-agricultural columns
+of Table II.  Its inputs and flow are deliberately separated from Excel:
+
+| Component | Raw/prepared input | Calculation | Table II output |
+| --- | --- | --- | --- |
+| Livestock | Catron, Grant, and Hidalgo cattle/sheep inventories; Gila National Forest annual cattle head-months | allocate county/forest inventories using the documented basin percentages; `head × gallons/day × 365 / 325,851` | Stock |
+| Stock tanks | adjusted annual pan evaporation, annual precipitation, weighted tank area, tank count, 85% in-service fraction | `max(pan - precipitation, 0) / 12 × area × count × 0.85` | Stock Tank Evaporation |
+| Lakes | adjusted pan evaporation, precipitation, lake area; Bill Evans NM Game & Fish allocation | `max(pan - precipitation, 0) / 12 × area`, or an approved direct allocation | Lake Surface Evaporation |
+| Standard M/I/D | Watermaster metered diversions and any non-consumptive quantity | `(diversion - nonconsumptive) × CU fraction` | Municipal, Industrial & Domestic |
+| Cliff-Gila M/I/D | fish-pond diversion/non-consumptive amount, Mimbres export, six Freeport accounting entries, fish-pond evaporation allocation | documented special sum: fish-pond CU + export + Freeport CU + fish-pond allocation | Municipal, Industrial & Domestic |
+
+The 2024 adapter in `backend/legacy_non_agricultural.py` is the sole place
+with legacy worksheet-cell knowledge.  It converts the workbook's raw or
+prepared inputs into named data classes; formulas are then evaluated only in
+the backend calculation module.  `backend/annual_summary.py` combines the
+four non-agricultural component vectors with the area CU results to create the
+four Table II annual-use rows.  The regression tests reproduce all 2024
+component values and annual totals.
+
+The old `archive_scripts` directory remains as historical evidence.  Its
+livestock script was not suitable as a compute engine because it omitted the
+National Forest allocation during calculation and relied on globals/API state;
+its tank script re-applied a time conversion to annual values.  New code must
+use the production backend modules instead.
+
 ## Remaining policy reconstruction
 
 The shared numerical equations are now code.  The remaining 2024 work is to

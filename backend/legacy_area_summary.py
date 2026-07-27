@@ -106,6 +106,8 @@ def _read_redrock(sheet: object) -> SpecialAreaCUInput:
             acres=_number(sheet["S28"].value) + _number(sheet["S30"].value),
             measured_diversion_acft=_number(sheet["T28"].value) + _number(sheet["T30"].value),
         ),
+        incidental_base_rate=0.10,
+        incidental_groundwater_supplement_rate=0.02,
     )
 
 
@@ -123,6 +125,8 @@ def _read_san_simon(sheet: object) -> SpecialAreaCUInput:
             acres=_number(sheet["F28"].value) + _number(sheet["F30"].value),
             measured_diversion_acft=_zero(sheet["I28"].value) + _zero(sheet["I30"].value),
         ),
+        incidental_base_rate=0.0,
+        incidental_groundwater_supplement_rate=0.0,
     )
 
 

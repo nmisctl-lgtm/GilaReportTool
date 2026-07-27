@@ -39,10 +39,14 @@ class StandardAreaSummaryTests(unittest.TestCase):
         self.assertAlmostEqual(redrock_result.full_supply_cu_af, 337.17366666666663, places=7)
         self.assertAlmostEqual(redrock_result.shortage_to_cu_af, 130.6380934740303, places=7)
         self.assertAlmostEqual(redrock_result.crop_and_pond_cu_af, 206.53557319263633, places=7)
+        self.assertAlmostEqual(redrock_result.incidental_losses_af, 20.673288652596966, places=7)
+        self.assertAlmostEqual(redrock_result.total_irrigated_cu_af, 227.2088618452333, places=7)
         self.assertAlmostEqual(san_simon_result.total_acres, 754.54, places=7)
         self.assertAlmostEqual(san_simon_result.full_supply_cu_af, 933.9736416666667, places=7)
         self.assertEqual(san_simon_result.shortage_to_cu_af, 0.0)
         self.assertAlmostEqual(san_simon_result.crop_and_pond_cu_af, 933.9736416666667, places=7)
+        self.assertEqual(san_simon_result.incidental_losses_af, 0.0)
+        self.assertAlmostEqual(san_simon_result.total_irrigated_cu_af, 933.9736416666667, places=7)
 
 
 if __name__ == "__main__":
