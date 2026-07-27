@@ -154,8 +154,10 @@ def build_historical_ditch_inputs(
     """Turn 2024 evidence into ledger inputs for workbook-parity validation.
 
     All blocks represented here are sourced from the legacy daily metered-flow
-    table.  The historical formula/non-formula pattern becomes the explicit
-    2024 shortage-assessment switch; it is not a policy inference for 2025.
+    table.  The standard crop/reservoir formula is always used for the demand
+    calculation.  A legacy *zero* reservoir-net-evaporation constant is
+    retained only as evidence that the small winter reservoir demand was not
+    shortage-assessed; it is never reused as a numerical demand override.
     """
 
     return tuple(DitchInput(
@@ -165,11 +167,12 @@ def build_historical_ditch_inputs(
         reservoir_acres=asset.reservoir_acres,
         monthly_diversion_acft=asset.monthly_diversion_acft,
         measurement_status=("metered",) * 12,
-        shortage_assessed=asset.shortage_formula_months,
-        monthly_reservoir_net_evap_override_acft=tuple(
-            None if is_formula else value
-            for is_formula, value in zip(
-                asset.reservoir_net_evap_formula_months, asset.monthly_reservoir_net_evap_acft
+        shortage_assessed=tuple(
+            formula_present and not (not reservoir_is_formula and reservoir_net_evap == 0)
+            for formula_present, reservoir_is_formula, reservoir_net_evap in zip(
+                asset.shortage_formula_months,
+                asset.reservoir_net_evap_formula_months,
+                asset.monthly_reservoir_net_evap_acft,
             )
         ),
     ) for asset in assets)

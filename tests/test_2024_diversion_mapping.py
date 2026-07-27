@@ -81,15 +81,38 @@ class Legacy2024DiversionMappingTests(unittest.TestCase):
             assets_by_id = {asset.canonical_ditch_id: asset for asset in assets}
             for ditch in ledger.ditches:
                 expected = assets_by_id[ditch.ditch_id]
-                for calculation, required, shortage, requirement_is_formula in zip(
+                for month, (calculation, required, shortage, requirement_is_formula, reservoir_is_formula) in enumerate(zip(
                     ditch.monthly,
                     expected.monthly_diversion_required_acft,
                     expected.monthly_shortage_acft,
                     expected.requirement_formula_months,
-                ):
-                    if requirement_is_formula:
+                    expected.reservoir_net_evap_formula_months,
+                ), 1):
+                    if requirement_is_formula and reservoir_is_formula:
                         self.assertAlmostEqual(calculation.total_diversion_required_acft, required, places=8)
                     self.assertAlmostEqual(calculation.diversion_shortage_acft, shortage, delta=0.03)
+
+    def test_standard_formula_corrects_the_three_legacy_constants_without_creating_shortage(self):
+        area = next(value for value in self.area_inputs if value.area_name == "LUNA")
+        assets = [asset for asset in self.assets if asset.area_name == "LUNA"]
+        ledger = calculate_area_diversion_ledger(
+            "LUNA",
+            efficiency=area.efficiency,
+            monthly_cir_ft=area.monthly_report_cir_ft,
+            monthly_pan_evap_ft=area.monthly_adjusted_pan_evap_ft,
+            monthly_precip_ft=area.monthly_precip_ft,
+            ditches=build_historical_ditch_inputs(assets),
+        )
+        by_id = {ditch.ditch_id: ditch for ditch in ledger.ditches}
+        leslie_march = by_id["luna_leslie_laney"].monthly[2]
+        self.assertAlmostEqual(leslie_march.reservoir_net_evap_acft, 0.0095, places=8)
+        self.assertAlmostEqual(leslie_march.total_diversion_required_acft, 0.03166666666666667, places=8)
+        self.assertEqual(leslie_march.diversion_shortage_acft, 0.0)
+        a_laney_march = by_id["luna_a_laney"].monthly[2]
+        self.assertEqual(a_laney_march.reservoir_net_evap_acft, 0.0)
+        self.assertEqual(a_laney_march.crop_diversion_required_acft, 0.0)
+        self.assertEqual(a_laney_march.total_diversion_required_acft, 0.0)
+        self.assertEqual(a_laney_march.diversion_shortage_acft, 0.0)
 
     def test_flags_one_nonzero_legacy_requirement_override_for_policy_review(self):
         issues = [issue for issue in validate_historical_requirement_overrides(self.assets) if issue.severity == "error"]

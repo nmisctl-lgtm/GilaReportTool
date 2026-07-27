@@ -64,12 +64,14 @@ without report metered-ditch blocks.
 acres plus each historical shortage-cell treatment from the report blocks.
 It captures those treatments for review but does not infer a future-year
 groundwater, estimated-flow, or shortage policy from a formula or zero.
-It also flags nonzero requirement cells pasted over formulas and preserves
-historical reservoir-net-evaporation constants as named overrides.  The 2024
-baseline contains one requirement exception (Luna `A. Laney Ditch`, March)
-and two reservoir overrides (Luna `Leslie Laney Ditch` and `A. Laney Ditch`,
-both March).  They must be resolved or explicitly approved as named policy
-exceptions before a fully automated production run uses them.
+It also flags nonzero requirement cells pasted over formulas and historical
+reservoir-net-evaporation constants.  The 2024 baseline contains one
+requirement exception (Luna `A. Laney Ditch`, March) and two reservoir
+constants (Luna `Leslie Laney Ditch` and `A. Laney Ditch`, both March).
+The production calculation uses the documented standard crop/reservoir formula
+instead of those constants.  A zero legacy reservoir constant is retained only
+as explicit evidence that the small winter reservoir demand is not
+shortage-assessed; it does not replace the computed demand.
 
 ## 4. Per-ditch demand and measured shortage
 
