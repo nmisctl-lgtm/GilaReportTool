@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import calendar
 import json
+import math
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
@@ -18,6 +19,11 @@ from typing import Literal, Mapping, Sequence
 
 
 Method = Literal["obc_usbr", "mbc_scs"]
+
+
+def _fortran_nint(value: float) -> int:
+    """Fortran INT(value + 0.5), not Python's bankers-rounding behaviour."""
+    return math.floor(value + 0.5)
 
 
 @dataclass(frozen=True)
@@ -160,7 +166,11 @@ class FortranParityEngine:
             cursor += month_days
         self.month_starts = tuple(starts)
         self.month_ends = tuple(start + days - 1 for start, days in zip(self.month_starts, self.days))
-        self.midpoints = tuple(int((start + end) / 2.0 + 0.5) for start, end in zip(self.month_starts, self.month_ends))
+        # xirrigcu uses (previous_month_end + current_month_end) / 2, then
+        # INT(value + 0.5).  ``start`` itself is one day later than the prior
+        # month end, so using start+end would shift several midpoints by a day.
+        self.midpoints = tuple(_fortran_nint((start - 1 + end) / 2.0)
+                               for start, end in zip(self.month_starts, self.month_ends))
 
     def run(self, method: Method, limits: DateLimits | None = None) -> CIRProfile:
         if method not in ("obc_usbr", "mbc_scs"):
@@ -173,6 +183,7 @@ class FortranParityEngine:
             segments = ((start, end, "main"),)
 
         monthly: list[MonthlyCIR] = []
+        days_after_start = 0.0
         for month in range(1, 13):
             m_start, m_end = self.month_starts[month - 1], self.month_ends[month - 1]
             segment = next(((max(m_start, begin), min(m_end, finish), phase, begin, finish)
@@ -180,19 +191,37 @@ class FortranParityEngine:
                             if max(m_start, begin) <= min(m_end, finish)), None)
             if segment is None:
                 monthly.append(self._empty_month(month))
+                if self.crop.crop_type == "WG" and month == 8:
+                    days_after_start = 0.0
                 continue
             begin, finish, phase, season_begin, season_finish = segment
             gd = finish - begin + 1
-            midpoint = (begin + finish) / 2.0
+            # For a full calendar month CIRCAL uses DAYMP, which is rounded
+            # to a whole Julian day.  Partial first/last months use the raw
+            # average of their boundary days.
+            midpoint = (
+                float(self.midpoints[month - 1])
+                if begin == m_start and finish == m_end
+                else (begin + finish) / 2.0
+            )
             temperature = self._temperature_at(midpoint, month)
             pdh = self.climate.daylight_pct[month - 1] * gd / self.days[month - 1]
             f_factor = temperature * pdh / 100.0
-            inside, outside = self._frost_days(begin, finish, gd, phase)
+            inside, outside = self._frost_days(
+                begin, finish, gd, phase, season_begin, season_finish
+            )
+            days_after_start += gd
             if method == "obc_usbr":
                 etc, coefficient, kt = self._obc_etc(f_factor, gd, inside, outside, phase), None, None
                 effective = self._usbr_effective_precip(month) * gd / self.days[month - 1]
             else:
-                coefficient = self._kc_at(midpoint, season_begin, season_finish, phase)
+                coefficient = self._kc_at(
+                    midpoint,
+                    season_begin,
+                    season_finish,
+                    phase,
+                    days_after_start - gd / 2.0,
+                )
                 kt = max(0.3, 0.0173 * temperature - 0.314)
                 etc = f_factor * kt * coefficient
                 effective = self._scs_effective_precip(month, etc) * gd / self.days[month - 1]
@@ -205,6 +234,8 @@ class FortranParityEngine:
                 coefficient_or_kc=coefficient, kt=kt, etc_in=etc,
                 effective_precip_in=effective, cir_in=max(0.0, etc - effective),
             ))
+            if self.crop.crop_type == "WG" and month == 8:
+                days_after_start = 0.0
         return CIRProfile(self.crop.crop_id, method, start, end, tuple(monthly))
 
     def _empty_month(self, month: int) -> MonthlyCIR:
@@ -215,6 +246,13 @@ class FortranParityEngine:
     def _season_bounds(self, limits: DateLimits) -> tuple[int, int]:
         start = self._threshold_day(self.crop.tem_f, spring=True)
         end = self._threshold_day(self.crop.tlm_f, spring=False, start_day=start)
+        # A winter-grain record uses the two date fields differently: they are
+        # the fall planting and spring harvest dates.  The legacy program
+        # applies them only after it has found the independent spring and fall
+        # temperature thresholds (labels 190--200 in CIRCAL); treating them as
+        # normal start/end limits collapses the cross-calendar season.
+        if self.crop.crop_type == "WG":
+            return int(start), int(end)
         if limits.plant_day is not None:
             start = max(start, limits.plant_day)
         if limits.harvest_day is not None:
@@ -246,9 +284,9 @@ class FortranParityEngine:
                     if prior is None or prior >= threshold:
                         return 1
                     day = -15 + 31 * (threshold - prior) / (value - prior)
-                    return max(1, round(day))
-                return round(self.midpoints[index - 1] + (self.midpoints[index] - self.midpoints[index - 1]) *
-                             (threshold - values[index - 1]) / (value - values[index - 1]))
+                    return max(1, _fortran_nint(day))
+                return _fortran_nint(self.midpoints[index - 1] + (self.midpoints[index] - self.midpoints[index - 1]) *
+                                      (threshold - values[index - 1]) / (value - values[index - 1]))
             raise ValueError(f"{self.crop.name}: spring threshold {threshold}°F is never reached")
         first_month = max(7, next((month for month, end in enumerate(self.month_ends, 1) if end >= (start_day or 1))))
         for index in range(first_month - 1, 12):
@@ -259,13 +297,17 @@ class FortranParityEngine:
                 return self.midpoints[index]
             if index == 0:
                 return 1
-            return round(self.midpoints[index - 1] + (self.midpoints[index] - self.midpoints[index - 1]) *
-                         (threshold - values[index - 1]) / (value - values[index - 1]))
+            return _fortran_nint(self.midpoints[index - 1] + (self.midpoints[index] - self.midpoints[index - 1]) *
+                                 (threshold - values[index - 1]) / (value - values[index - 1]))
         next_january = self.climate.next_january_mean_f
-        if next_january is None or next_january <= threshold:
+        # At the final data year, the legacy TA1 value is used to interpolate
+        # an end date only when the following January is *below* the terminal
+        # threshold.  A warm following January means growth remains through
+        # December 31.
+        if next_january is None or next_january >= threshold:
             return self.month_ends[-1]
         day = self.midpoints[-1] + 31 * (threshold - values[-1]) / (next_january - values[-1])
-        return min(self.month_ends[-1], round(day))
+        return min(self.month_ends[-1], _fortran_nint(day))
 
     def _winter_grain_segments(self, start: int, end: int, limits: DateLimits) -> tuple[tuple[int, int, str], ...]:
         harvest = limits.harvest_day if limits.harvest_day is not None else self.month_ends[7]
@@ -288,13 +330,30 @@ class FortranParityEngine:
             return self.climate.monthly_mean_f[index]
         return self.climate.monthly_mean_f[index] + (next_temp - self.climate.monthly_mean_f[index]) * (day - self.midpoints[index]) / (next_day - self.midpoints[index])
 
-    def _frost_days(self, begin: int, finish: int, gd: int, phase: str) -> tuple[int, int]:
+    def _frost_days(
+        self,
+        begin: int,
+        finish: int,
+        gd: int,
+        phase: str,
+        season_begin: int,
+        season_finish: int,
+    ) -> tuple[int, int]:
         if self.crop.crop_type == "WG":
             return (gd, 0) if phase == "spring" else (0, gd)
         spring, fall = self.climate.last_spring_32_day, self.climate.first_fall_32_day
         if spring is None or fall is None:
             return gd, 0
-        inside_begin, inside_end = spring + 1, fall - 1
+        # CIRCAL classifies a frost-boundary day as outside when a season
+        # crosses it, but as inside when the boundary itself is the crop's
+        # start/end date.  That subtle distinction matters for crops governed
+        # by 32 F thresholds, such as Misc. Vegetable.
+        inside_begin = spring if season_begin == spring else spring + 1
+        # The detailed legacy outputs consistently charge the first autumn
+        # 32 F day at the outside-frost coefficient, including when it is the
+        # stated season end (despite an ambiguous branch in the fixed-format
+        # source listing).
+        inside_end = fall - 1
         inside = max(0, min(finish, inside_end) - max(begin, inside_begin) + 1)
         return inside, gd - inside
 
@@ -303,11 +362,22 @@ class FortranParityEngine:
             return f_factor * (self.crop.obc_k_inside if phase == "spring" else self.crop.obc_k_outside)
         return f_factor * ((inside / gd) * self.crop.obc_k_inside + (outside / gd) * self.crop.obc_k_outside)
 
-    def _kc_at(self, midpoint: float, start: int, end: int, phase: str) -> float:
+    def _kc_at(
+        self,
+        midpoint: float,
+        start: int,
+        end: int,
+        phase: str,
+        days_after_start_midpoint: float,
+    ) -> float:
         curve = self.crop.mbc_fall_curve if self.crop.crop_type == "WG" and phase == "fall" else self.crop.mbc_curve
         if curve is None:
             raise ValueError(f"{self.crop.name}: MBC requires a crop coefficient curve")
-        stage = midpoint if self.crop.crop_type == "PR" else (midpoint - start + 0.5) * 100 / (end - start + 1)
+        stage = (
+            midpoint
+            if self.crop.crop_type == "PR"
+            else days_after_start_midpoint * 100 / (end - start + 1)
+        )
         return curve.value_at(stage)
 
     def _usbr_effective_precip(self, month: int) -> float:

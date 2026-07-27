@@ -31,8 +31,10 @@ class FortranParityTests(unittest.TestCase):
         profile = FortranParityEngine(crop, climate()).run("obc_usbr")
         self.assertEqual((profile.season_start_day, profile.season_end_day), (100, 219))
         self.assertEqual(sum(row.growing_days for row in profile.monthly), 120)
-        self.assertEqual(sum(row.inside_frost_free_days for row in profile.monthly), 119)
-        self.assertEqual(sum(row.outside_frost_free_days for row in profile.monthly), 1)
+        # xirrigcu counts the spring 32 F boundary date as inside when it is
+        # itself the computed crop start date.
+        self.assertEqual(sum(row.inside_frost_free_days for row in profile.monthly), 120)
+        self.assertEqual(sum(row.outside_frost_free_days for row in profile.monthly), 0)
 
     def test_usbr_effective_precipitation_is_prorated_and_capped_at_etc(self):
         crop = CropDefinition("demo", "Demo", "PR", 32, 32, 0.01, 0.01)
