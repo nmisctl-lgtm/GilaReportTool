@@ -10,6 +10,8 @@
 * **当前堵塞/待办:** 
   * !!! **Corp Survey data clean up**!!!
   * 准备启动 Phase 2 (`regional_aggregator.py`) 的开发。
+  * 准备将已有的livestock用水脚本加入
+  * 准备读取diversion数据并合并计算
 
 ---
 
@@ -28,10 +30,18 @@
 
 ---
 
-## 🛠️ 常用开发命令速查
+## 🛠️ 常用开发命令/dir速查
 * **同步环境:** `uv sync`
 * **添加依赖:** `uv add <package_name>`
 * **运行集成测试:** `python test_phase1.py`
 * **激活venv:**
   * PowerShell `venv\Scripts\Activate.ps1` 
   * macOS/Linux `source venv/bin/activate`
+* Diversion Gage data: 
+  - Dir link:
+  https://nmgov-my.sharepoint.com/:f:/r/personal/ali_effati_ose_nm_gov/Documents/Desktop/Gila/Gages?csf=1&web=1&e=NqVeZy
+
+  - Workbook link:
+  https://nmgov-my.sharepoint.com/:x:/r/personal/ali_effati_ose_nm_gov/Documents/Desktop/Gila/Gages/November%20Visit%20Data/Diversion%20Records%20-%20End%20of%20Season%202025/GSF%20Diversion%20Records%202025_tab(1).xlsx?d=we8d2dd152d8348129973f40394d0caa6&csf=1&web=1&e=lOPuSa
+
+  
