@@ -46,6 +46,25 @@ baseline parity.  QA reports duplicate dates, values outside the report year,
 negative/non-finite CFS, and every missing daily value.  A numeric zero is a
 valid observation; a missing value is never silently changed to zero.
 
+### Source-channel identity is explicit
+
+`backend/legacy_2024_diversion_mapping.py` records a disposition for every
+2024 `flow` column.  It is a baseline validation configuration, not a general
+name-cleaning rule.  `backend/diversion_mapping.py` rejects unmapped channels
+and duplicate source/canonical mappings; it never guesses from similar names.
+
+This distinction matters in the Luna/Glenwood data: source `W.S. Laney` maps
+to **William S. Laney Ditch** in Luna and totals **640.748083 AF** (reported
+as 640.75 AF); source `W. S.` is a distinct **W S Ditch (GSF39 supplement)**
+in Glenwood and totals 1771.093917 AF.  The 2024 configuration maps 21 source
+channels to report ditches and explicitly excludes two zero-flow channels
+without report metered-ditch blocks.
+
+`backend/legacy_report_assets.py` reads the crop, reservoir, and pre-plant
+acres plus each historical shortage-cell treatment from the report blocks.
+It captures those treatments for review but does not infer a future-year
+groundwater, estimated-flow, or shortage policy from a formula or zero.
+
 ## 4. Per-ditch demand and measured shortage
 
 For a ditch and month, with efficiency `e`, crop acres `A_crop`, reservoir
