@@ -98,6 +98,21 @@ groundwater-supplied records need an explicit policy classification.
 
 ## 5. Area and report aggregation
 
+For the seven standard 2024 area layouts, `backend/area_consumptive_use.py`
+implements the yellow-box logic explicitly.  Metered surface water establishes
+the annual shortage fraction `diversion_shortage / diversion_required`; that
+same fraction is applied to metered and unmetered **surface-water** crop/pond
+CU.  Groundwater crop/pond CU is full supply.  Incidental losses are then
+`10% × actual surface CU + 2% × groundwater CU`.  The seven ordinary area
+totals reproduce their workbook rows exactly through
+`backend/legacy_area_summary.py`; Redrock and San Simon's extra CRP/full-CIR
+classes are represented explicitly as special cases.  Their CRP/natural
+grassland CU is the recorded metered diversion (rather than a CIR product),
+while their metered-full-CIR acreage remains full supply and does not receive
+the surface-water shortage fraction.  San Simon's groundwater CU is the total
+of Brown-box watermaster well diversions, which is a direct measured-use input
+rather than acreage times the area CIR.
+
 The area ledger aggregates separately classified acreage (metered and
 short-supplied, full-supplied groundwater, reservoir, CRP/natural grassland,
 and other area-specific classes).  It then produces:
