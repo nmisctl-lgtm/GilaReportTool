@@ -1,8 +1,11 @@
-"""Area-level irrigation consumptive-use aggregation outside Excel.
+"""Area irrigation consumptive-use aggregation / 区域灌溉耗水量汇总。
 
 The generic nine-area workbook layout separates metered surface water,
 unmetered surface water, and groundwater.  Only the two surface-water classes
 receive the measured diversion-shortage fraction; groundwater is full supply.
+
+这是 2025 生产计算路径。地表水按已计量的缺水比例扣减；地下水视为足额供给。
+所有分类都必须作为输入提供，不能从空白或零值猜测。
 """
 
 from __future__ import annotations
@@ -12,7 +15,7 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class AcreageClass:
-    """Crop and reservoir/pond acreage under one water-supply classification."""
+    """Acreage under one supply class / 同一供水类别下的作物和水面面积。"""
 
     crop_acres: float = 0.0
     reservoir_acres: float = 0.0
@@ -27,7 +30,7 @@ class AcreageClass:
 
 @dataclass(frozen=True)
 class MeteredSurfaceSupply:
-    """Annual metered ditch demand and measured shortage for an area."""
+    """Metered surface-water demand and shortage / 区域计量地表水需求与缺水。"""
 
     acreage: AcreageClass
     diversion_required_acft: float
@@ -102,7 +105,7 @@ class SpecialAreaCUResult:
 
 
 def calculate_generic_area_cu(inputs: GenericAreaCUInput) -> GenericAreaCUResult:
-    """Calculate the common area-sheet rows used by seven 2024 area layouts.
+    """Calculate standard area rows / 计算普通区域的汇总行。
 
     Workbook equivalence:
 

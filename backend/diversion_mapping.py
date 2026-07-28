@@ -1,9 +1,12 @@
-"""Strict source-channel to report-ditch mapping.
+"""Strict source-channel to report-ditch mapping / 严格的来源水渠到报告水渠映射。
 
 Diversion source labels are identifiers, not names to be normalized or
 fuzzy-matched.  A report run must provide an explicit disposition for every
 source channel: either it feeds one canonical report ditch, or it is
 deliberately excluded with a documented reason.
+
+来源标签是标识符，不允许模糊匹配。每个来源水渠必须明确映射到一个报告水渠，
+或填写排除原因；这样 2025 新格式不会把名称相近的水渠错误合并。
 """
 
 from __future__ import annotations
@@ -20,7 +23,7 @@ MappingDisposition = Literal["report_ditch", "excluded"]
 
 @dataclass(frozen=True)
 class SourceDitchMapping:
-    """One explicit disposition for a source-workbook channel label."""
+    """One explicit source disposition / 一个明确的来源水渠处理决定。"""
 
     source_ditch_id: str
     disposition: MappingDisposition
@@ -65,6 +68,8 @@ def map_monthly_diversions(
     monthly: Iterable[MonthlyDiversionSummary], mappings: Iterable[SourceDitchMapping]
 ) -> DiversionMappingResult:
     """Apply exact mappings and flag all missing/ambiguous dispositions.
+
+    应用精确映射，并标记所有缺失或有歧义的处理决定。
 
     The current report configuration is one source channel per canonical ditch.
     If a future method intentionally combines sources, it must introduce an

@@ -4,6 +4,13 @@ Description:
 The core mathematical engine for calculating Consumptive Irrigation Requirements (CIR) 
 using the Original Blaney-Criddle methodology and USBR Effective Precipitation.
 It strictly relies on the data structures defined in backend/models.py.
+
+STATUS / 状态：Historical prototype only / 仅供历史原型参考。
+The verified production replacement is ``fortran_parity.py``. Do not call
+this module for a 2025 report unless it is separately validated.
+
+已核对的生产替代模块为 ``fortran_parity.py``。除非单独验证，否则不要用本模块
+生成 2025 报告。
 """
 
 import logging

@@ -1,10 +1,14 @@
-"""Transparent, testable implementation of the xirrigcu-10-06 CIR methods.
+"""Transparent, testable CIR engine / 透明、可测试的 CIR 计算引擎。
 
 This module deliberately has no GIS, Excel, PDF, or network dependency.  It is
 the first replacement layer for the legacy Fortran program: callers supply one
 year of area climate and crop parameters, and receive an auditable monthly CIR
 ledger for either Original Blaney-Criddle (OBC) or Modified Blaney-Criddle
 (MBC).  Area/ditch accounting belongs in a later module.
+
+这是替代旧 Fortran 的已核对生产计算模块。调用方提供一个区域、一年的气象和
+作物参数，即可得到 Original Blaney-Criddle（OBC，原始方法）或 Modified
+Blaney-Criddle（MBC，修正方法）的可审计月度 CIR 账。区域和水渠核算属于后续模块。
 """
 
 from __future__ import annotations
@@ -22,13 +26,13 @@ Method = Literal["obc_usbr", "mbc_scs"]
 
 
 def _fortran_nint(value: float) -> int:
-    """Fortran INT(value + 0.5), not Python's bankers-rounding behaviour."""
+    """Fortran rounding / Fortran 的 INT(value + 0.5) 舍入，不是 Python 银行家舍入。"""
     return math.floor(value + 0.5)
 
 
 @dataclass(frozen=True)
 class Curve:
-    """A 25-point (or shorter) MBC Kc curve, linearly interpolated by stage."""
+    """MBC Kc curve / 按生育阶段线性插值的 MBC 作物系数曲线。"""
 
     x: tuple[float, ...]
     y: tuple[float, ...]
@@ -65,7 +69,7 @@ class CropDefinition:
 
 @dataclass(frozen=True)
 class DateLimits:
-    """User planting/harvest or water-cutoff dates, expressed as Julian days."""
+    """Plant/harvest limits / 用户提供的种植、收获或停水日期（儒略日）。"""
 
     plant_day: int | None = None
     harvest_day: int | None = None
@@ -73,7 +77,7 @@ class DateLimits:
 
 @dataclass(frozen=True)
 class ClimateYear:
-    """Climate input for one area and year; all depths are inches except daylight."""
+    """One area-year climate input / 一个区域、一年的气象输入；深度均为英寸。"""
 
     year: int
     monthly_mean_f: tuple[float, ...]
@@ -153,7 +157,7 @@ def load_crop_definitions(path: str | Path) -> dict[str, CropDefinition]:
 
 
 class FortranParityEngine:
-    """Implements the published xirrigcu season, OBC, MBC, and rainfall equations."""
+    """CIR calculation engine / 实现生长季、OBC、MBC 和有效降水方程的 CIR 引擎。"""
 
     def __init__(self, crop: CropDefinition, climate: ClimateYear) -> None:
         self.crop = crop

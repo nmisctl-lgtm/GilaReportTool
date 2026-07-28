@@ -1,4 +1,4 @@
-"""Report-ready annual consumptive-use summary independent of Excel formulas."""
+"""Report-ready annual-use summary / 不依赖 Excel 公式的年度耗水汇总。"""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from .non_agricultural_use import REPORT_STREAMS, NonAgriculturalUseResult
 
 @dataclass(frozen=True)
 class AnnualUseSummaryRow:
+    """One Table II stream-system row / Table II 中一个流域的汇总行。"""
     stream_system: str
     irrigation_af: float
     stock_tank_evaporation_af: float
@@ -32,7 +33,7 @@ def build_annual_use_summary(
     irrigation_by_stream: Mapping[str, float],
     non_agricultural: NonAgriculturalUseResult,
 ) -> tuple[AnnualUseSummaryRow, ...]:
-    """Build the calculated component rows that feed Table II annual use."""
+    """Build Table II component rows / 生成 Table II 年用水分项汇总行。"""
 
     _validate_irrigation(irrigation_by_stream)
     return tuple(

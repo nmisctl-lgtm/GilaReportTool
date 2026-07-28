@@ -1,7 +1,7 @@
 [project]
 name = "gilareporttool"
 version = "0.1.0"
-description = "Add your description here"
+description = "Transparent, QA/QC-ready Gila–San Francisco consumptive-use reporting"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

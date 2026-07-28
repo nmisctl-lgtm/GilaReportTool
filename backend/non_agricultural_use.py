@@ -1,9 +1,13 @@
-"""Transparent non-agricultural consumptive-use calculations.
+"""Transparent non-agricultural consumptive-use calculations / 透明的非农耗水计算。
 
 These calculations replace the one-off scripts in ``archive_scripts``.  They
 intentionally do not fetch web data or read spreadsheets: callers supply
 validated raw inputs, and this module returns auditable intermediate results.
 The 2024 legacy-workbook adapter lives in :mod:`legacy_non_agricultural`.
+
+本模块是 2025 的生产计算路径：调用方提供已经 QA/QC 的原始或准备后输入，
+模块返回可审计的中间结果。2024 的工作簿单元格读取只存在于
+``legacy_non_agricultural`` 适配器中。
 """
 
 from __future__ import annotations
@@ -27,7 +31,7 @@ LEGACY_REPORT_DAYS = 365
 
 @dataclass(frozen=True)
 class LivestockInventory:
-    """County inventory and annual National Forest head-months.
+    """County inventory and forest head-months / 县级存栏量和森林 head-months。
 
     The report convention is 365 days even in leap years, matching the
     historical workbook.  National Forest figures are head-months and are
@@ -52,7 +56,7 @@ class LivestockUse:
 
 
 def calculate_livestock_use(inventory: LivestockInventory) -> dict[str, LivestockUse]:
-    """Allocate livestock to report stream systems and calculate annual CU.
+    """Allocate livestock and calculate CU / 分配牲畜并计算年度耗水量。
 
     Allocation fractions are the documented 2024 report assumptions.  Forest
     cattle are first assigned from Gila National Forest head-months, then
@@ -96,7 +100,7 @@ def calculate_livestock_use(inventory: LivestockInventory) -> dict[str, Livestoc
 
 @dataclass(frozen=True)
 class StockTankSite:
-    """Annual stock-tank evaporation input for one area/group of tanks."""
+    """Stock-tank evaporation input / 一个区域或一组牲畜饮水池的蒸发输入。"""
 
     name: str
     stream_system: str
@@ -249,7 +253,7 @@ def calculate_non_agricultural_use(
     municipal_diversions: tuple[MunicipalDiversion, ...],
     cliff_gila_municipal: CliffGilaMunicipalUse,
 ) -> NonAgriculturalUseResult:
-    """Calculate every Table II non-agricultural component from raw inputs."""
+    """Calculate all Table II non-ag components / 从原始输入计算 Table II 全部非农分项。"""
 
     livestock_results = calculate_livestock_use(livestock)
     return NonAgriculturalUseResult(
