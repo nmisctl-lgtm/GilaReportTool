@@ -38,9 +38,7 @@ Please confirm or revise the following proposed mappings:
 
 For each item, a confirmation of the correct value and any applicable business rule would be very helpful. If there is an authoritative GIS layer, data dictionary, or prior-year decision log we should use, please point us to it so the automated workflow can apply the same rule consistently.
 
-Thank you,
 
-[Your Name]
 
 
 Questions:
