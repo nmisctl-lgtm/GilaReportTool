@@ -1,3 +1,48 @@
+**Subject:** Request for clarification on Crop Survey GIS attributes and crop-code mapping
+
+Hello colleagues,
+
+As we prepare the automated Gila Report workflow, we are reconciling the Crop Survey GIS layers with the OSE reference table and the Blaney-Criddle (`xirrigcu`) crop library. Could you please help confirm the items below, or identify the appropriate source of record?
+
+**1. GIS crop-code and attribute inconsistencies**
+
+In the Virden Valley (VV) layer:
+
+- OID 174: should crop code be `OCG`?
+- OID 211: should crop code be `PIW`?
+- OID 315: should this be `FA` or `HA`? Is it irrigated? Based on imagery/attributes, it appears to be fallow (`FA`), but Crop_type is “Hay (all other).”
+- OID 117: should this be `STW` or `RW`? It appears to be `STW`.
+- OIDs 248, 203, and 117: `Irr_code` appears null or zero. Please confirm the intended irrigation classification.
+
+In the Cliff-Gila (CG) layer:
+
+- The following OIDs have null `Unit`/`Ucode` values: 35, 55, 63, 91, 102, 121, 290, 295, 322, 338, 363, 387, 391, 534, 537, and 897, as well as additional records.
+- Our preliminary assumption is that these records belong to CG unless otherwise specified. Please confirm.
+- CG OID 1126 appears to duplicate a feature already included in the Upper Gila (UG) layer as OID 134. Please confirm which record should be retained for reporting.
+
+In the Redrock (RR) layer:
+
+- OIDs 1–7 have no `Irr_code` (null or zero). Please confirm the intended irrigation classification.
+
+**2. Proposed mapping from OSE crop codes to the `xirrigcu` crop library**
+
+Please confirm or revise the following proposed mappings:
+
+| OSE code | Crop | Proposed Blaney-Criddle ID | Rationale |
+| --- | --- | ---: | --- |
+| GB | Garden Beans | 3 — Misc. Vegetable | Garden Beans appear to be fresh vegetables; this seems more appropriate than ID 12, Dry Beans. |
+| PI | Pistachios | 4 — Orchard | Pistachios appear more comparable to the general orchard curve than the pecan-specific curve. |
+| PEW | Pecans WUCB | 27 — Pecan Orchards | This is a pecan subtype and appears to share standard pecan parameters. |
+| WSG | Winter Small Grains (Spring) | 8 — Winter Small Grain (winter–spring) | This directly matches the OSE “Spring” designation. |
+| SSL | Swamped/Seeped Land | 0 — Excluded from standard CIR calculation | Proposed treatment is similar to fallow/outside areas for Crop Survey and Decree accounting. |
+
+For each item, a confirmation of the correct value and any applicable business rule would be very helpful. If there is an authoritative GIS layer, data dictionary, or prior-year decision log we should use, please point us to it so the automated workflow can apply the same rule consistently.
+
+Thank you,
+
+[Your Name]
+
+
 Questions:
 1. Inconsistency in Crop_code and Crop_type in GIS files, and the table in the Report at p426. Here are a few examples I noticed:
 
