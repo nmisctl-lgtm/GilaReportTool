@@ -38,3 +38,62 @@ VV: 248, 203, 117. No Irr_code. It seems they are all null or zero.
 
 	5. SSL - Swamped/Seeped Land. Present in both GIS and OSE tables. I think it should be BC_ID 0 (Excluded from standard CIR calculations). While seeped lands consume water via evaporation, for the purpose of the Crop Survey and Decree accounting, I assume they are treated similarly to Fallow (FA) or Out Areas (OUT) and are not calculated as artificially irrigated acreage requiring a BC_ID.
 
+3. Proposed crop mapping:
+# --- Crops (for CIR) ---
+    "AL": 1,    # Alfalfa
+    "CR": 2,    # Corn (grain)
+    "CB": 3,    # Cabbage -> Misc. Vegetable
+    "ON": 3,    # Onions -> Misc. Vegetable
+    "MV": 3,    # Misc. Vegetables
+    "GB": 3,    # Garden Beans (703) -> Misc. Vegetable
+    "AP": 4,    # Apples -> Orchard
+    "OR": 4,    # Orchard
+    "ONG": 4,   # Orchard (no ground cover)
+    "OCG": 4,   # Orchard (ground cover) [GIS拼写]
+    "OGC": 4,   # Orchard (ground cover) [OSE标准拼写]
+    "PI": 4,    # Pistachios (610) -> Standard Orchard
+    "PT": 5,    # Pasture (Generic)
+    "PIC": 5,   # Pasture (Improved/Planted, Cool Grass)
+    "PIW": 5,   # Pasture (Improved/Planted, Warm Grass)
+    "OA": 6,    # Oats -> Spring Small Grains
+    "SSG": 6,   # Spring Small Grains
+    "TC": 7,    # Turfgrass (Cool Season)
+    "WW": 8,    # Winter Wheat
+    "CW": 8,    # Corn Winter Wheat
+    "WSG": 8,   # Winter Small Grains (Spring 140) -> BC_ID 8
+    "CS": 10,   # Corn (Silage)
+    "BE": 12,   # Dry Beans
+    "ME": 13,   # Melons
+    "CH": 14,   # Chile
+    "GR": 15,   # Grapes
+    "SG": 16,   # Sorghum Grain
+    "SO": 16,   # Sorghum
+    "PN": 19,   # Pasture (Native)
+    "HA": 20,   # Hay (all other)
+    "NT": 21,   # Nursery Trees -> Misc.Nursery Stock
+    "CC": 22,   # Catch Crop -> Misc.Field Crops
+    "MFC": 22,  # Misc. Field Crops
+    "CO": 23,   # Cotton
+    "CT": 24,   # Christmas Trees (221) -> BC_ID 24
+    "TW": 25,   # Turfgrass (Warm Season)
+    "PE": 27,   # Pecans
+    "PEI": 27,  # Pecans ISC (609)
+    "PEW": 27,  # Pecans WUCB (609.1) -> BC_ID 27
+    "PU": 29,   # Pasture (Unimproved)
+    
+    # --- 0 represents no CIR ---
+    "MON": 0,   # Misc. Outdoor Nursery Stock (Domestic use)
+    "BL": 0,    # Blank
+    "FA": 0,    # Fallow, idle or otherwise not irrigated
+    "ID": 0,    # Idle
+    "NA": 0,    # Non-Ag
+    "NC": 0,    # Non-Crop
+    "OUT": 0,   # Out Areas
+    "PLG": 0,   # Plowed Ground
+    "SSL": 0,   # Swamped/Seeped Land
+    "RW": 0,    # Reservoir Retaining Water
+    "RD": 0,    # Reservoir Dry
+    "STW": 0,   # Stock Tank Retaining water
+    "STD": 0,   # Stock Tank Dry
+    "UN": 0,    # Unreported
+    "NI": 0,    # Not Inspected
