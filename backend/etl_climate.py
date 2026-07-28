@@ -3,6 +3,10 @@ Module: backend/etl_climate.py
 Description: 
 Spatial ETL pipeline to extract climate data (GridMET) via OPeNDAP, 
 perform zonal statistics against irrigated polygons, and compute daylight hours.
+
+STATUS / 状态：Input-extraction module pending production review / 输入提取模块，
+尚待生产审查。GridMET 数据质量当前按项目决定暂不重新验证；在 2025 报告使用
+前，仍需确认该模块的空间参考、远程服务可用性和输出 QA/QC。
 """
 
 import logging
@@ -18,6 +22,7 @@ from rasterstats import zonal_stats
 logging.basicConfig(level=logging.INFO, format='%(levelname)s - %(message)s')
 
 class ClimateETL:
+    """Climate extraction adapter / 气象提取适配器（投产前需审查）。"""
     def __init__(self, gdb_path: str, layer_name: str, year: int, table16_df: pd.DataFrame):
         self.year = year
         self.start_date = f"{year}-01-01"
@@ -39,8 +44,7 @@ class ClimateETL:
 
     def interpolate_daylight_percentage(self, latitude: float, month_idx: int) -> float:
         """
-        Calculates the monthly percentage of daytime hours based on Table 16
-        using linear interpolation for a specific latitude.
+        Calculates monthly daylight percentage / 按纬度线性插值计算月度日照百分比。
         """
         lats = self.table_16.index.values
         if latitude <= lats[0]: return float(self.table_16.iloc[0, month_idx - 1])
@@ -56,8 +60,8 @@ class ClimateETL:
 
     def run_pipeline(self, polygon_id_column: str = "Name"):
         """
-        Extracts GridMET data, performs unit transformations, runs Zonal Statistics, 
-        and returns clean DataFrames for the compute engine.
+        Extracts GridMET data and returns compute inputs / 提取 GridMET、转换单位、
+        执行分区统计并返回计算引擎输入。投产前必须确认空间与服务 QA/QC。
         """
         bounds = self.gdf.total_bounds
         min_lon, min_lat = bounds[0] - 0.1, bounds[1] - 0.1

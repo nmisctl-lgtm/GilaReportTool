@@ -4,6 +4,14 @@ Description:
     遵照 1964 年最高法院法令 (1964 Supreme Court Decree) 规范与 NMOSE 官方水账台账 (luna_irrigation.xlsx)，
     实现从“月度渠首引水与气象蒸发数据”计算全流域缺水率 (J32)，
     并推导计算第 32 行 (S32 面积, T32 潜在需水, U32 缺水量, V32 净消耗, W32 附带损耗) 的核心水耗聚合器。
+
+STATUS / 状态：Historical prototype only / 仅供历史原型参考。
+It is not the production calculation path and is not used by the 2024
+regression tests. Use ``diversion_ledger.py`` and
+``area_consumptive_use.py`` for new 2025 work.
+
+它不是生产计算路径，也没有纳入 2024 回归测试。2025 新工作请使用
+``diversion_ledger.py`` 和 ``area_consumptive_use.py``。
 """
 
 import logging

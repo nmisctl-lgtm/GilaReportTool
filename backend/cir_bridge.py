@@ -1,10 +1,13 @@
-"""Bridge the two legacy CIR methods into the monthly values used by reports.
+"""Bridge the two CIR methods into report-month values / 把两种 CIR 方法连接为报告月值。
 
 The 2024 workbook uses the annual weighted Original Blaney-Criddle (OBC)
 result for the amount of consumptive irrigation requirement, while using the
 monthly Modified Blaney-Criddle (MBC) result only to establish the timing.
 Keeping this bridge separate makes that otherwise hidden Excel relationship
 explicit and reusable by the diversion ledger.
+
+本模块保留 OBC 的全年总需水量，并使用 MBC 的月度分布决定每个月的比例；
+它把旧工作簿中隐藏的关系变成可检查、可复用的计算步骤。
 """
 
 from __future__ import annotations
@@ -17,7 +20,7 @@ from .cir_runner import AreaCIRRun
 
 @dataclass(frozen=True)
 class AreaCIRBridge:
-    """Annual OBC demand allocated among months by MBC timing, in inches."""
+    """Annual OBC demand allocated by MBC timing / 用 MBC 时间分布拆分 OBC 年需水量。"""
 
     area_id: int
     area_name: str
@@ -32,7 +35,7 @@ class AreaCIRBridge:
 
 
 def build_area_cir_bridge(obc: AreaCIRRun, mbc: AreaCIRRun) -> AreaCIRBridge:
-    """Allocate a matched area/year's OBC annual CIR using MBC monthly ratios."""
+    """Allocate OBC by MBC monthly ratios / 按 MBC 月比例分配 OBC 年 CIR。"""
 
     if (obc.area_id, obc.area_name, obc.year) != (mbc.area_id, mbc.area_name, mbc.year):
         raise ValueError("OBC and MBC runs must represent the same area and year")

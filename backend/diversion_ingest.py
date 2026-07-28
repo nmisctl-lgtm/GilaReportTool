@@ -1,4 +1,12 @@
-"""Daily diversion aggregation and QA, independent of any spreadsheet layout."""
+"""Daily diversion aggregation and QA / 日引水量汇总与质量检查。
+
+Production calculation module for 2025. It converts observed daily flow to
+monthly acre-feet and reports missing, duplicate, or invalid readings without
+silently changing raw data.
+
+2025 生产计算模块：把每日实测流量换算为月度英亩英尺，并报告缺失、重复或
+不合理读数；不会悄悄修改原始数据。
+"""
 
 from __future__ import annotations
 
@@ -19,6 +27,7 @@ CFS_DAY_TO_ACRE_FEET = 1.98347
 
 @dataclass(frozen=True)
 class DailyDiversionRecord:
+    """One observed daily flow / 单日实测流量。"""
     ditch_id: str
     measured_on: date
     mean_cfs: float | None
@@ -26,6 +35,7 @@ class DailyDiversionRecord:
 
 @dataclass(frozen=True)
 class MonthlyDiversionSummary:
+    """One ditch-month volume and coverage result / 单条水渠单月水量与覆盖率。"""
     ditch_id: str
     year: int
     month: int
@@ -49,6 +59,8 @@ def aggregate_daily_diversions(
     records: Iterable[DailyDiversionRecord], *, year: int
 ) -> DiversionAggregation:
     """Aggregate CFS-day observations and report coverage/quality defects.
+
+    汇总“立方英尺每秒 × 天”的观测值并报告覆盖率/质量问题。
 
     A zero is a valid observed diversion. ``None`` is missing data and is not
     converted to zero.  This distinction is carried into the downstream

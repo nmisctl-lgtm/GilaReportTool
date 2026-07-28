@@ -1,5 +1,7 @@
 """Auditable monthly diversion-demand and shortage calculations.
 
+可审计的月度引水需求与缺水计算，供 2025 生产流程使用。
+
 This is the common calculation underlying the metered-ditch blocks in the
 2024 workbook.  Area-specific classification of groundwater/estimated supply
 belongs in a separate policy layer; this module deliberately requires that
@@ -18,6 +20,7 @@ MeasurementStatus = Literal["metered", "estimated", "unavailable"]
 
 @dataclass(frozen=True)
 class QAIssue:
+    """A review finding, never a silent correction / 审阅发现，不是静默修正。"""
     severity: Literal["error", "warning"]
     code: str
     message: str
@@ -27,7 +30,7 @@ class QAIssue:
 
 @dataclass(frozen=True)
 class DitchInput:
-    """Raw monthly data and explicit assessment policy for one ditch."""
+    """Raw monthly data and explicit policy / 单条水渠的原始月度数据和明确政策。"""
 
     ditch_id: str
     name: str
@@ -106,7 +109,7 @@ def validate_ledger_inputs(
     monthly_precip_ft: tuple[float, ...],
     ditches: tuple[DitchInput, ...],
 ) -> tuple[QAIssue, ...]:
-    """Return input-quality findings without changing any raw values."""
+    """Return QA findings without changing raw values / 只返回 QA 发现，不修改原始值。"""
 
     issues: list[QAIssue] = []
     if not 0 < efficiency <= 1:
@@ -152,7 +155,7 @@ def calculate_ditch_ledger(
     monthly_pan_evap_ft: tuple[float, ...],
     monthly_precip_ft: tuple[float, ...],
 ) -> DitchLedger:
-    """Calculate crop/reservoir requirements and assessed monthly shortfall."""
+    """Calculate requirements and assessed shortfall / 计算需求与已评估的月度缺口。"""
 
     issues = validate_ledger_inputs(
         efficiency=efficiency,
@@ -209,7 +212,7 @@ def calculate_area_diversion_ledger(
     monthly_precip_ft: tuple[float, ...],
     ditches: tuple[DitchInput, ...],
 ) -> AreaDiversionLedger:
-    """Apply the same transparent calculation to every ditch in an area."""
+    """Calculate every ditch in one area / 对一个区域的每条水渠执行相同透明计算。"""
 
     return AreaDiversionLedger(
         area_name=area_name,
